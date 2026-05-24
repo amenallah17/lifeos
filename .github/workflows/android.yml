@@ -2,6 +2,8 @@ name: Build Android APK
 
 on:
   workflow_dispatch:
+  push:
+    tags: ['v*']
 
 jobs:
   build:
@@ -49,3 +51,10 @@ jobs:
         with:
           name: lifeos-apk
           path: android/app/build/outputs/apk/debug/app-debug.apk
+
+      - name: Create GitHub Release
+        if: startsWith(github.ref, 'refs/tags/')
+        uses: softprops/action-gh-release@v2
+        with:
+          files: android/app/build/outputs/apk/debug/app-debug.apk
+          generate_release_notes: true
