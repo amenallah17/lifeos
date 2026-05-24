@@ -29,18 +29,37 @@ jobs:
           distribution: temurin
           java-version: 17
 
+      - name: Debug environment
+        run: |
+          echo "JAVA_HOME: $JAVA_HOME"
+          java -version
+          echo "---"
+
       - name: Set up Android SDK
         run: |
           SDK_ROOT=/usr/local/lib/android/sdk
           echo "ANDROID_HOME=$SDK_ROOT" >> $GITHUB_ENV
           echo "ANDROID_SDK_ROOT=$SDK_ROOT" >> $GITHUB_ENV
-          echo "$SDK_ROOT/platform-tools" >> $GITHUB_PATH
-          echo "$SDK_ROOT/cmdline-tools/latest/bin" >> $GITHUB_PATH
+
+      - name: Debug SDK
+        run: |
+          echo "ANDROID_HOME: $ANDROID_HOME"
+          ls -la $ANDROID_HOME/ 2>/dev/null || echo "SDK dir MISSING"
+          ls -la $ANDROID_HOME/cmdline-tools/ 2>/dev/null || echo "No cmdline-tools"
+          ls -la $ANDROID_HOME/platforms/ 2>/dev/null || echo "No platforms"
+          ls -la $ANDROID_HOME/build-tools/ 2>/dev/null || echo "No build-tools"
 
       - name: Install Android SDK 36
         run: |
-          yes | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager "platforms;android-36" "build-tools;36.0.0" --sdk_root=$ANDROID_HOME
-          yes | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --licenses --sdk_root=$ANDROID_HOME
+          echo y | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager "platforms;android-36" "build-tools;36.0.0" --sdk_root=$ANDROID_HOME
+          echo y | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --licenses --sdk_root=$ANDROID_HOME
+
+      - name: Debug SDK after install
+        run: |
+          echo "=== PLATFORMS ==="
+          ls -la $ANDROID_HOME/platforms/ 2>/dev/null || echo "No platforms"
+          echo "=== BUILD TOOLS ==="
+          ls -la $ANDROID_HOME/build-tools/ 2>/dev/null || echo "No build-tools"
 
       - name: Copy web assets to Capacitor
         run: |
@@ -55,9 +74,10 @@ jobs:
         run: chmod +x android/gradlew
 
       - name: Build APK
-        run: cd android && ./gradlew assembleDebug --no-daemon --stacktrace
+        run: cd android && ./gradlew assembleDebug --no-daemon --stacktrace --info 2>&1
 
       - uses: actions/upload-artifact@v4
+        if: always()
         with:
           name: lifeos-apk
           path: android/app/build/outputs/apk/debug/app-debug.apk
