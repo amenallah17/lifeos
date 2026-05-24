@@ -3,6 +3,7 @@ name: Build Android APK
 on:
   workflow_dispatch:
   push:
+    branches: [main]
     tags: ['v*']
 
 jobs:
@@ -41,8 +42,8 @@ jobs:
           yes | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager "platforms;android-36" "build-tools;36.0.0" --sdk_root=$ANDROID_HOME || true
           yes | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --licenses --sdk_root=$ANDROID_HOME || true
 
-      - name: Sync Capacitor
-        run: npx cap sync android
+      - name: Copy web assets to Capacitor
+        run: npx cap copy android
 
       - name: Build APK
         run: cd android && ./gradlew assembleDebug
