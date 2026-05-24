@@ -3,7 +3,6 @@ const nextConfig = {
   output: 'export',
   trailingSlash: true,
   images: { unoptimized: true },
-  assetPrefix: './',
   webpack: (config, { isServer }) => {
     if (!isServer) {
       config.resolve.fallback = {
