@@ -31,12 +31,27 @@ jobs:
       - uses: actions/setup-java@v4
         with:
           distribution: temurin
-          java-version: 17
+          java-version: 21
 
-      - name: Install Android SDK
+      - name: Check Android SDK setup
         run: |
-          echo y | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager "platforms;android-34" "platforms;android-36" --sdk_root=$ANDROID_HOME
-          echo y | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --licenses --sdk_root=$ANDROID_HOME
+          echo "ANDROID_HOME=$ANDROID_HOME"
+          ls -la $ANDROID_HOME/ || true
+          ls -la $ANDROID_HOME/cmdline-tools/ 2>/dev/null || echo "No cmdline-tools at expected path"
+          ls -la $ANDROID_HOME/platforms/ 2>/dev/null || echo "No platforms dir"
+          find $ANDROID_HOME -name "sdkmanager" 2>/dev/null || echo "sdkmanager not found"
+
+      - name: Accept licenses & install platform 36
+        run: |
+          SDKMANAGER=$(find $ANDROID_HOME -name "sdkmanager" -type f 2>/dev/null | head -1)
+          if [ -z "$SDKMANAGER" ]; then
+            echo "SDK manager not found, trying sdkmanager in PATH"
+            yes | sdkmanager "platforms;android-36" --sdk_root=$ANDROID_HOME || true
+          else
+            echo "Found sdkmanager at: $SDKMANAGER"
+            yes | $SDKMANAGER "platforms;android-36" --sdk_root=$ANDROID_HOME
+            yes | $SDKMANAGER --licenses --sdk_root=$ANDROID_HOME
+          fi
 
       - name: Copy web assets to Capacitor
         run: |

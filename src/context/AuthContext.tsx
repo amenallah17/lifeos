@@ -43,6 +43,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return () => stopPeriodicSync();
   }, [user?.id]);
 
+  // Detect Android WebView (Capacitor) — Supabase API calls hang from file://
+  const isMobileNative = typeof window !== 'undefined' &&
+    typeof navigator !== 'undefined' &&
+    !window.electronAPI &&
+    navigator.userAgent.includes('Android');
+
   // Restore session and data from disk/localStorage on mount
   useEffect(() => {
     // 1. Load disk-persisted data into localStorage (synchronous — from preload)
@@ -66,14 +72,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       } catch {}
     }
 
-    // 3. Offline mode
+    // 3. Mobile native (Android): skip Supabase entirely — it hangs from file://
+    if (isMobileNative) {
+      setLoading(false);
+      setIsOffline(true);
+      return;
+    }
+
+    // 4. Offline mode (Electron with no Supabase key)
     if (!useSupabase) {
       setLoading(false);
       setIsOffline(true);
       return;
     }
 
-    // 4. Try Supabase session with timeout fallback
+    // 5. Try Supabase session with timeout fallback
     const timer = setTimeout(() => {
       setLoading(false);
       setIsOffline(true);
@@ -128,8 +141,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }
 
   const signIn = async (email: string, password: string) => {
-    // Try Supabase first with real credentials
-    if (useSupabase) {
+    // Skip Supabase on Android — fetch hangs from file:// origin
+    if (useSupabase && !isMobileNative) {
       try {
         const { error } = await supabase!.auth.signInWithPassword({ email, password });
         if (!error) return {};
