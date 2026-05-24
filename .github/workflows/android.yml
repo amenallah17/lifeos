@@ -7,8 +7,8 @@ on:
     tags: ['v*']
 
 env:
-  JAVA_OPTS: -Xmx4g
-  GRADLE_OPTS: -Dorg.gradle.daemon=false -Dorg.gradle.jvmargs="-Xmx4g -XX:+HeapDumpOnOutOfMemoryError"
+  ANDROID_HOME: /usr/local/lib/android/sdk
+  ANDROID_SDK_ROOT: /usr/local/lib/android/sdk
 
 jobs:
   build:
@@ -33,19 +33,9 @@ jobs:
           distribution: temurin
           java-version: 17
 
-      - uses: gradle/actions/setup-gradle@v4
-
-      - name: Set up Android SDK
-        run: |
-          SDK_ROOT=/usr/local/lib/android/sdk
-          echo "ANDROID_HOME=$SDK_ROOT" >> $GITHUB_ENV
-          echo "ANDROID_SDK_ROOT=$SDK_ROOT" >> $GITHUB_ENV
-          echo "$SDK_ROOT/platform-tools" >> $GITHUB_PATH
-          echo "$SDK_ROOT/cmdline-tools/latest/bin" >> $GITHUB_PATH
-
       - name: Install Android SDK
         run: |
-          echo y | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager "platforms;android-36" --sdk_root=$ANDROID_HOME
+          echo y | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager "platforms;android-34" "platforms;android-36" --sdk_root=$ANDROID_HOME
           echo y | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --licenses --sdk_root=$ANDROID_HOME
 
       - name: Copy web assets to Capacitor
@@ -58,8 +48,10 @@ jobs:
         run: echo "sdk.dir=$ANDROID_HOME" > android/local.properties
 
       - name: Build APK
-        working-directory: android
-        run: ./gradlew assembleDebug --no-daemon --stacktrace
+        run: cd android && ./gradlew assembleDebug --no-daemon --stacktrace
+        env:
+          JAVA_OPTS: -Xmx4g
+          GRADLE_OPTS: -Dorg.gradle.jvmargs="-Xmx4g"
 
       - uses: actions/upload-artifact@v4
         if: always()
