@@ -39,8 +39,8 @@ jobs:
 
       - name: Install Android SDK 36
         run: |
-          yes | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager "platforms;android-36" "build-tools;36.0.0" --sdk_root=$ANDROID_HOME || true
-          yes | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --licenses --sdk_root=$ANDROID_HOME || true
+          yes | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager "platforms;android-36" "build-tools;36.0.0" --sdk_root=$ANDROID_HOME
+          yes | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --licenses --sdk_root=$ANDROID_HOME
 
       - name: Copy web assets to Capacitor
         run: |
@@ -48,8 +48,14 @@ jobs:
           mkdir -p android/app/src/main/assets/public
           cp -r out/* android/app/src/main/assets/public/
 
+      - name: Create local.properties
+        run: echo "sdk.dir=$ANDROID_HOME" > android/local.properties
+
+      - name: Make gradlew executable
+        run: chmod +x android/gradlew
+
       - name: Build APK
-        run: cd android && ./gradlew assembleDebug
+        run: cd android && ./gradlew assembleDebug --no-daemon --stacktrace
 
       - uses: actions/upload-artifact@v4
         with:
