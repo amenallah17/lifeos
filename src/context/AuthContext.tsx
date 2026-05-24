@@ -51,6 +51,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   // Restore session and data from disk/localStorage on mount
   useEffect(() => {
+    // Hard timeout: force loading false after 3s no matter what
+    const hardTimeout = setTimeout(() => {
+      setLoading(false);
+    }, 3000);
+
     // 1. Load disk-persisted data into localStorage (synchronous — from preload)
     if (typeof window !== 'undefined' && window.electronAPI?.storageData) {
       const diskData = window.electronAPI.storageData;
@@ -68,6 +73,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setSession(saved.session);
         setDevMode(true);
         setLoading(false);
+        clearTimeout(hardTimeout);
         return;
       } catch {}
     }
@@ -76,6 +82,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (isMobileNative) {
       setLoading(false);
       setIsOffline(true);
+      clearTimeout(hardTimeout);
       return;
     }
 
@@ -83,6 +90,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (!useSupabase) {
       setLoading(false);
       setIsOffline(true);
+      clearTimeout(hardTimeout);
       return;
     }
 
@@ -94,11 +102,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     supabase!.auth.getSession().then(({ data: { session } }) => {
       clearTimeout(timer);
+      clearTimeout(hardTimeout);
       setSession(session);
       setUser(session?.user ?? null);
       setLoading(false);
     }).catch(() => {
       clearTimeout(timer);
+      clearTimeout(hardTimeout);
       setLoading(false);
       setIsOffline(true);
     });
@@ -110,6 +120,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     return () => {
       clearTimeout(timer);
+      clearTimeout(hardTimeout);
       subscription.unsubscribe();
     };
   }, []);

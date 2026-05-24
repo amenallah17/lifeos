@@ -7,6 +7,7 @@ import { Toaster } from 'sonner';
 import ClientInit from '@/components/layout/ClientInit';
 import ClientAuthProvider from '@/components/layout/ClientAuthProvider';
 import PwaRegister from '@/components/layout/PwaRegister';
+import ErrorBoundary from '@/components/ErrorBoundary';
 
 export const metadata = {
   title: 'LifeOS',
@@ -32,15 +33,17 @@ export default function RootLayout({ children }: { children: ReactNode }) {
         <meta name="apple-mobile-web-app-title" content="LifeOS" />
       </head>
       <body className="min-h-screen antialiased">
-        <ClientAuthProvider>
-          <ClientInit />
-          <PwaRegister />
-          <MainLayout>
-            {children}
-          </MainLayout>
-          <QuickCapture />
-          <CommandPalette />
-        </ClientAuthProvider>
+        <ErrorBoundary>
+          <ClientAuthProvider>
+            <ClientInit />
+            <PwaRegister />
+            <MainLayout>
+              {children}
+            </MainLayout>
+            <QuickCapture />
+            <CommandPalette />
+          </ClientAuthProvider>
+        </ErrorBoundary>
         <Toaster
           position="bottom-right"
           toastOptions={{

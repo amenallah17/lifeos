@@ -43,9 +43,5 @@ export default function AuthGuard({ children }: { children: ReactNode }) {
     );
   }
 
-  if (!user && !isOffline) {
-    return null;
-  }
-
   return <>{children}</>;
 }
