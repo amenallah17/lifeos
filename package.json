@@ -1,0 +1,108 @@
+{
+  "name": "lifeos",
+  "version": "1.0.0",
+  "description": "LifeOS - Premium Personal Productivity Desktop Application",
+  "main": "electron/main.js",
+  "author": "",
+  "repository": "your-username/lifeos",
+  "scripts": {
+    "dev": "concurrently \"next dev\" \"wait-on http://localhost:3000 && electron .\"",
+    "build:next": "next build",
+    "start": "electron .",
+    "dev:web": "next dev",
+    "build:apk": "node scripts/bump-android-version.js && next build && npx cap sync android && cd android && gradlew assembleDebug",
+    "lint": "next lint",
+    "dist": "next build && electron-builder",
+    "package": "next build && electron-builder",
+    "dist:win": "next build && electron-builder --win",
+    "dist:portable": "next build && electron-builder --win portable"
+  },
+  "dependencies": {
+    "@capacitor/android": "^8.3.4",
+    "@capacitor/cli": "^8.3.4",
+    "@capacitor/core": "^8.3.4",
+    "@dnd-kit/core": "^6.1.0",
+    "@dnd-kit/sortable": "^8.0.0",
+    "@dnd-kit/utilities": "^3.2.0",
+    "@hello-pangea/dnd": "^18.0.1",
+    "@supabase/supabase-js": "^2.106.0",
+    "date-fns": "^3.6.0",
+    "electron-updater": "^6.8.3",
+    "framer-motion": "^11.0.0",
+    "lucide-react": "^0.400.0",
+    "next": "^14.2.0",
+    "react": "^18.3.0",
+    "react-dom": "^18.3.0",
+    "react-markdown": "^9.0.0",
+    "recharts": "^2.12.0",
+    "sonner": "^1.5.0",
+    "sql.js": "^1.10.0",
+    "zustand": "^4.5.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.12.0",
+    "@types/react": "^18.3.0",
+    "@types/react-dom": "^18.3.0",
+    "autoprefixer": "^10.4.0",
+    "concurrently": "^8.2.0",
+    "electron": "^30.0.0",
+    "electron-builder": "^24.13.0",
+    "electron-reloader": "^1.2.3",
+    "postcss": "^8.4.0",
+    "tailwindcss": "^3.4.0",
+    "typescript": "^5.4.0",
+    "wait-on": "^7.2.0"
+  },
+  "build": {
+    "appId": "com.lifeos.app",
+    "productName": "LifeOS",
+    "files": [
+      "electron/**/*",
+      "out/**/*",
+      "package.json"
+    ],
+    "directories": {
+      "output": "release",
+      "buildResources": "build"
+    },
+    "publish": [
+      {
+        "provider": "github",
+        "private": false,
+        "releaseType": "release"
+      }
+    ],
+    "win": {
+      "target": [
+        "nsis",
+        "portable"
+      ],
+      "icon": "public/icon.png",
+      "artifactName": "${productName}-${version}-${arch}.${ext}"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "LifeOS",
+      "installerIcon": "public/icon.png",
+      "uninstallerIcon": "public/icon.png",
+      "installerHeaderIcon": "public/icon.png",
+      "deleteAppDataOnUninstall": false,
+      "guid": "com.lifeos.app"
+    },
+    "portable": {
+      "artifactName": "${productName}-${version}-portable-${arch}.exe",
+      "splashImage": "public/icon.png"
+    },
+    "mac": {
+      "target": "dmg",
+      "icon": "public/icon.png"
+    },
+    "linux": {
+      "target": "AppImage",
+      "icon": "public/icon.png"
+    }
+  }
+}

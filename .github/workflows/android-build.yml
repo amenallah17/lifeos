@@ -1,0 +1,56 @@
+name: Build Android APK
+
+on:
+  push:
+    branches: [main]
+    tags: ['v*']
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+
+      - name: Set up Android SDK
+        run: |
+          SDK_ROOT=/usr/local/lib/android/sdk
+          echo "ANDROID_HOME=$SDK_ROOT" >> $GITHUB_ENV
+          echo "ANDROID_SDK_ROOT=$SDK_ROOT" >> $GITHUB_ENV
+          echo "$SDK_ROOT/platform-tools" >> $GITHUB_PATH
+          echo "$SDK_ROOT/cmdline-tools/latest/bin" >> $GITHUB_PATH
+
+      - name: Install Android SDK 36
+        run: |
+          yes | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager "platforms;android-36" "build-tools;36.0.0" --sdk_root=$ANDROID_HOME || true
+
+      - name: Accept licenses
+        run: yes | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --licenses --sdk_root=$ANDROID_HOME || true
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build Next.js static export
+        run: npx next build
+
+      - name: Sync Capacitor
+        run: npx cap sync android
+
+      - name: Build APK
+        run: cd android && ./gradlew assembleDebug
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: lifeos-apk
+          path: android/app/build/outputs/apk/debug/app-debug.apk
