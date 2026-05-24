@@ -73,12 +73,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       return;
     }
 
-    // 4. Try Supabase session
+    // 4. Try Supabase session with timeout fallback
+    const timer = setTimeout(() => {
+      setLoading(false);
+      setIsOffline(true);
+    }, 7000);
+
     supabase!.auth.getSession().then(({ data: { session } }) => {
+      clearTimeout(timer);
       setSession(session);
       setUser(session?.user ?? null);
       setLoading(false);
     }).catch(() => {
+      clearTimeout(timer);
       setLoading(false);
       setIsOffline(true);
     });
@@ -88,7 +95,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setUser(session?.user ?? null);
     });
 
-    return () => subscription.unsubscribe();
+    return () => {
+      clearTimeout(timer);
+      subscription.unsubscribe();
+    };
   }, []);
 
   function createDevUser(email: string) {
@@ -123,6 +133,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       try {
         const { error } = await supabase!.auth.signInWithPassword({ email, password });
         if (!error) return {};
+        return { error: error.message };
       } catch {}
     }
     // Fallback: create local dev session

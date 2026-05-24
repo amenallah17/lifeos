@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react';
 import { motion } from 'framer-motion';
-import { supabase } from '@/lib/supabase';
+import { useAuth } from '@/context/AuthContext';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { Mail, Lock, Eye, EyeOff, LogIn } from 'lucide-react';
@@ -74,6 +74,7 @@ function ParticlesBackground() {
 
 export default function LoginPage() {
   const router = useRouter();
+  const { signIn } = useAuth();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
@@ -89,15 +90,12 @@ export default function LoginPage() {
     }
     setLoading(true);
 
-    const { data, error: signInError } = await supabase.auth.signInWithPassword({
-      email: email,
-      password: password,
-    });
+    const { error: signInError } = await signIn(email, password);
 
     setLoading(false);
     if (signInError) {
-      setError(signInError.message);
-    } else if (data?.user) {
+      setError(signInError as string);
+    } else {
       router.push('/dashboard');
     }
   }
